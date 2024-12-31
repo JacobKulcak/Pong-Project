@@ -14,7 +14,9 @@ sizeX, sizeY = 20, 200
 bRad = 20
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("BOB THE VIDEOGAME")
-pygame.display.set_icon(pygame.image.load('bob.png'))
+pygame.display.set_icon(pygame.image.load("bob.png"))
+pygame.mixer.music.load("BGM-1.mp3")
+pygame.mixer.music.play(-1, 0, 2000)
 
 # Main game loop ===========================================
 
@@ -44,27 +46,22 @@ while running:
     
     if (bX - bRad) < 0:
         tX = tX * -1
-        print("left side hit")
     if (bX + bRad) > width:
         tX = tX * -1
-        print("right side hit")
     if (bY - bRad) < 0:
         tY = tY * -1
-        print("top side hit")
     if (bY + bRad) > height:
         tY = tY * -1
-        print("bottom side hit")
     
     bX = bX + tX
     bY = bY + tY
 
     # Fill the screen with a color
     screen.fill((0, 0, 255))  # RGB color: blue
-
+    
     pygame.draw.rect(screen, (255,50,50), (player_x, player_y, sizeX, sizeY))
     pygame.draw.rect(screen, (200,200,0), (player2_x, player2_y, sizeX, sizeY))
     pygame.draw.circle(screen, (255,255,255),(bX, bY), bRad)
-
 
     # Update the display
     pygame.display.update()
