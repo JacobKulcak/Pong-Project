@@ -7,11 +7,11 @@ pygame.init()
 
 # Set up the display
 width, height = 1500, 700
-player_x, player_y = 0, 0
-player2_x, player2_y = 900, 500
+sizeX, sizeY = 20, 200
+player_x, player_y = width*0.25, (height/2 - sizeY/2)
+player2_x, player2_y = width*0.75, (height/2 - sizeY/2)
 bX, bY = width/2, height/2
 tX, tY = 1.5, 1.5
-sizeX, sizeY = 20, 200
 bRad = 20
 screen = pygame.display.set_mode((width, height))
 player_1 = pygame.Rect(player_x, player_y, sizeX, sizeY)
@@ -19,10 +19,14 @@ player_2 = pygame.Rect(player2_x, player2_y, sizeX, sizeY)
 ball_center = (bX, bY)
 player1_score = 0
 player2_score = 0
+cooldown = 0
 pygame.display.set_caption("BOB THE VIDEOGAME")
 pygame.display.set_icon(pygame.image.load("bob.png"))
+pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.load("BGM-1.mp3")
-pygame.mixer.music.play(-1, 0, 2000)
+pygame.mixer.music.play(-1, 0, 1000)
+collision_sound = pygame.mixer.Sound("BallCollide.mp3")
+font = pygame.font.Font(None, 72)
 
 
 def rect_circle_collision(p, b_coord, b_rad):
@@ -47,32 +51,40 @@ while running:
         if event.type == pygame.QUIT:
             running = False
     
+    print(player1_score, end='\r')
+    
     key = pygame.key.get_pressed()
-    if key[pygame.K_a] == True:
+    if (key[pygame.K_a] == True) and (player_1.left > 0):
         player_1.move_ip(-1, 0)
-    if key[pygame.K_w] == True:
+    if (key[pygame.K_w] == True) and (player_1.top > 0):
         player_1.move_ip(0, -1)
-    if key[pygame.K_s] == True:
+    if (key[pygame.K_s] == True) and (player_1.top < height-sizeY):
         player_1.move_ip(0, 1)
-    if key[pygame.K_d] == True:
+    if (key[pygame.K_d] == True) and (player_1.left < width/2 - sizeX):
         player_1.move_ip(1, 0)
-    if key[pygame.K_LEFT] == True:
-        player2_x = player2_x - 1
-    if key[pygame.K_UP] == True:
-        player2_y = player2_y - 1
-    if key[pygame.K_DOWN] == True:
-        player2_y = player2_y + 1
-    if key[pygame.K_RIGHT] == True:
-        player2_x = player2_x + 1
+    if (key[pygame.K_LEFT] == True) and (player_2.left > width/2 + 2):
+        player_2.move_ip(-1, 0)
+    if (key[pygame.K_UP] == True) and (player_2.top > 0):
+        player_2.move_ip(0, -1)
+    if (key[pygame.K_DOWN] == True) and (player_2.top < height-sizeY):
+        player_2.move_ip(0, 1)
+    if (key[pygame.K_RIGHT] == True) and (player_2.left < width - sizeX):
+        player_2.move_ip(1, 0)
+    if (key[pygame.K_ESCAPE] == True):
+        running = False
     
     if (bX - bRad) < 0:
         tX = tX * -1
+        collision_sound.play()
     if (bX + bRad) > width:
         tX = tX * -1
+        collision_sound.play()
     if (bY - bRad) < 0:
         tY = tY * -1
+        collision_sound.play()
     if (bY + bRad) > height:
         tY = tY * -1
+        collision_sound.play()
     
     bX = bX + tX
     bY = bY + tY
@@ -80,16 +92,30 @@ while running:
 
     # Fill the screen with a color
     screen.fill((20, 50, 100))  # RGB color: blue
-    pygame.draw.line(screen, (255,255,255), (width/2,0), (width/2,height), width=3)
+    pygame.draw.line(screen, (0,0,0), (width/2,0), (width/2,height), width=2)
     
-    pygame.draw.rect(screen, (255,50,50), player_1)
+    pygame.draw.rect(screen, (10,100,250), player_1)
     pygame.draw.rect(screen, (200,200,0), player_2)
     pygame.draw.circle(screen, (255,255,255), ball_center, bRad)
     
-    if(rect_circle_collision(player_1, ball_center, bRad) == True):
-        tX *= -1
-        
-    print(ball_center, end='\r')
+    text_surface = font.render(str(player1_score), True, (20,200,50))
+    screen.blit(text_surface, (width*0.25,50))
+    text_surface = font.render(str(player2_score), True, (200,20,30))
+    screen.blit(text_surface, (width*0.75,50))
+    
+    if(cooldown==False):
+        if(rect_circle_collision(player_1, ball_center, bRad) == True):
+            tX *= -1
+            cooldown = 100
+            player1_score += 1
+            collision_sound.play()
+        if(rect_circle_collision(player_2, ball_center, bRad) == True):
+            tX *= -1
+            cooldown = 100
+            player2_score += 1
+            collision_sound.play()
+    else:
+        cooldown -= 1
         
 
     # Update the display
