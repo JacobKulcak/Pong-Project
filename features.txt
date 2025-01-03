@@ -1,0 +1,10 @@
+Features to add to Ultimate BONG
+
+Start/Victory screen
+Working collision
+Options for adjusting player speeds, ball speeds/spawn, etc.
+Ball spawn meter
+
+3-4 powerups that fall from random points in the ceiling
+
+Player gains point for hitting ball, opponent gains point for ball hitting player's wall

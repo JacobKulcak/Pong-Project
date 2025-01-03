@@ -52,13 +52,13 @@ class player:
 class ball:
     
     # Initialize attributes
-    def __init__(self, x=screen_width/2, y=screen_height/2, radius=10, color=(255,255,255)):
+    def __init__(self, x=screen_width/2, y=screen_height/2, radius=20, color=(255,255,255)):
         self.x = x
         self.y = y
         self.radius = radius
         self.color = color
-        self.x_speed = random.randint(-20,20)
-        self.y_speed = random.randint(-10,10)
+        self.x_speed = high_low_rand(-20,-5,5,20)
+        self.y_speed = high_low_rand(-10,-3,3,10)
         self.draw()
         
     # Update
@@ -98,6 +98,13 @@ def rect_circle_collision(p, b_coord, b_rad):
     # Collision occurs if the distance is less than or equal to the circle's radius
     return distance <= b_rad
 
+# Pick random value between two given ranges
+def high_low_rand(ll, lh, hl, hh):
+    if random.choice([True, False]):
+        return random.randint(ll, lh)
+    else:
+        return random.randint(hl, hh)
+
 #===================================================================================================================
         
 # Set up the display
@@ -130,11 +137,14 @@ font = pygame.font.Font(None, 72)
 clock = pygame.time.Clock()
 running = True
 waiting_for_release = False
+start_time = pygame.time.get_ticks()
 
 #=========================================================================================================================
 
 # Main game loop
 while running:
+    
+    current_time = pygame.time.get_ticks()
     
     # When window is closed, program stops
     for event in pygame.event.get():
@@ -148,9 +158,16 @@ while running:
                 waiting_for_release = True
         elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
                 waiting_for_release = False
-    
+
+    # Timer based ball spawn
+    if (current_time - start_time >= 5000):
+        balls.append(ball())
+        start_time = current_time
+
     # Framerate
     clock.tick(60)
+    
+    print("Milliseconds since program started: " + str(pygame.time.get_ticks()), end = '\r')
     
     # Player movement
     key = pygame.key.get_pressed()
