@@ -129,6 +129,7 @@ victory_sound = pygame.mixer.Sound("Victory.mp3")
 font = pygame.font.Font(None, 72)
 clock = pygame.time.Clock()
 running = True
+waiting_for_release = False
 
 #=========================================================================================================================
 
@@ -139,6 +140,14 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+            
+        # Events for ball spawn
+        if event.type == pygame.KEYDOWN and not waiting_for_release:    
+            if event.key == pygame.K_SPACE:
+                balls.append(ball())
+                waiting_for_release = True
+        elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
+                waiting_for_release = False
     
     # Framerate
     clock.tick(60)
@@ -150,9 +159,6 @@ while running:
     # Escape key close game
     if key[pygame.K_ESCAPE]:
         running = False
-        
-    if key[pygame.K_SPACE]:
-        balls.append(ball())
     
     # Fill screen with blue
     screen.fill((10, 25, 50))
