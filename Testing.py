@@ -2,6 +2,8 @@
 import pygame, sys, math, random
 pygame.init()
 
+screen_width, screen_height = 1500, 700
+
 #=========================================================================================================================
 
 class player:
@@ -50,13 +52,13 @@ class player:
 class ball:
     
     # Initialize attributes
-    def __init__(self, x, y, radius, color, x_speed, y_speed):
+    def __init__(self, x=screen_width/2, y=screen_height/2, radius=10, color=(255,255,255)):
         self.x = x
         self.y = y
         self.radius = radius
         self.color = color
-        self.x_speed = x_speed
-        self.y_speed = y_speed
+        self.x_speed = random.randint(-20,20)
+        self.y_speed = random.randint(-10,10)
         self.draw()
         
     # Update
@@ -99,7 +101,6 @@ def rect_circle_collision(p, b_coord, b_rad):
 #===================================================================================================================
         
 # Set up the display
-screen_width, screen_height = 1500, 700
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("BOB THE VIDEOGAME")
 pygame.display.set_icon(pygame.image.load("bob.png"))
@@ -114,8 +115,8 @@ player_2 = player(screen_width*0.75, (screen_height/2 - 200/2), 20, 200, (200,20
 player_2.set_controls(pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT)
 player_2.set_borders(0, screen_height-200, screen_width/2 + 2,screen_width - player_2.rect.width)
 
-# Set up ball 1
-ball_1 = ball(screen_width/2, screen_height/2, 20, (255,255,255), 15, 5)
+# Set up ball array
+balls = [ball(screen_width/2, screen_height/2, 20, (255,255,255))] 
 
 # Music play
 pygame.mixer.music.set_volume(0.1)
@@ -147,8 +148,11 @@ while running:
     player_1.move(key); player_2.move(key)
     
     # Escape key close game
-    if (key[pygame.K_ESCAPE] == True):
+    if key[pygame.K_ESCAPE]:
         running = False
+        
+    if key[pygame.K_SPACE]:
+        balls.append(ball())
     
     # Fill screen with blue
     screen.fill((10, 25, 50))
@@ -157,21 +161,27 @@ while running:
     pygame.draw.line(screen, (0,0,0), (screen_width/2,0), (screen_width/2,screen_height), width=2)
     
     # Players and ball update
-    player_1.draw(); player_2.draw(); ball_1.move(); ball_1.draw()
+    player_1.draw(); player_2.draw(); 
     
-    # Detects collision between ball and player 1
-    if(rect_circle_collision(player_1.rect, (ball_1.x, ball_1.y), ball_1.radius)):
-        ball_1.x_speed *= -1
-        player_1.inc_score()
-        collision_sound.play()
-        ball_1.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
-    
-    # Detects collision between ball and player 2
-    if(rect_circle_collision(player_2.rect, (ball_1.x,ball_1.y), ball_1.radius)):
-        ball_1.x_speed *= -1
-        player_2.inc_score()
-        collision_sound.play()
-        ball_1.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+    # For every ball object
+    for b in balls:
+        
+        # Update and draw new location
+        b.move(); b.draw()
+        
+        # Detects collision between ball and player 1
+        if(rect_circle_collision(player_1.rect, (b.x, b.y), b.radius)):
+            b.x_speed *= -1
+            player_1.inc_score()
+            collision_sound.play()
+            b.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+        
+        # Detects collision between ball and player 2
+        if(rect_circle_collision(player_2.rect, (b.x,b.y), b.radius)):
+            b.x_speed *= -1
+            player_2.inc_score()
+            collision_sound.play()
+            b.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
         
     # Player 1 scoreboard
     text_surface = font.render(str(player_1.score), True, (20,200,50))
@@ -182,7 +192,7 @@ while running:
     screen.blit(text_surface, (screen_width*0.75,50))
     
     # Victory Check
-    if player_1.score == 10 or player_2.score == 10:
+    if player_1.score == 1000 or player_2.score == 1000:
         victory_sound.play()
         running = False
         
