@@ -32,6 +32,36 @@ collision_sound = pygame.mixer.Sound("BallCollide.mp3")
 victory_sound = pygame.mixer.Sound("Victory.mp3")
 font = pygame.font.Font(None, 72)
 
+class player:
+    def __init__(self, x, y, width, height, color):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.score = 0
+        self.color = color
+        self.draw()
+        
+    def set_controls(self, key_up, key_down, key_left, key_right):
+        self.key_up = key_up
+        self.key_down = key_down
+        self.key_left = key_left
+        self.key_right = key_right
+    
+    def draw(self):
+        pygame.draw.rect(screen, self.color, self)
+        
+    def inc_score(self):
+        self.score += 1
+        
+    def move(self, key):
+        if (key[self.key_left]) and (self.rect.left > 0):
+            self.move_ip(-5, 0)
+        if (key[self.key_up]) and (self.rect.top > 0):
+            self.move_ip(0, -5)
+        if (key[self.key_down]) and (self.rect.top < height-sizeY):
+            self.move_ip(0, 5)
+        if (key[self.key_right]) and (self.rect.left < width/2 - sizeX):
+            self.move_ip(5, 0)
+        
+        
 
 def rect_circle_collision(p, b_coord, b_rad):
     bx, by = b_coord
@@ -60,22 +90,8 @@ while running:
     print(player1_score, end='\r')
     
     key = pygame.key.get_pressed()
-    if (key[pygame.K_a] == True) and (player_1.left > 0):
-        player_1.move_ip(-5, 0)
-    if (key[pygame.K_w] == True) and (player_1.top > 0):
-        player_1.move_ip(0, -5)
-    if (key[pygame.K_s] == True) and (player_1.top < height-sizeY):
-        player_1.move_ip(0, 5)
-    if (key[pygame.K_d] == True) and (player_1.left < width/2 - sizeX):
-        player_1.move_ip(5, 0)
-    if (key[pygame.K_LEFT] == True) and (player_2.left > width/2 + 2):
-        player_2.move_ip(-5, 0)
-    if (key[pygame.K_UP] == True) and (player_2.top > 0):
-        player_2.move_ip(0, -5)
-    if (key[pygame.K_DOWN] == True) and (player_2.top < height-sizeY):
-        player_2.move_ip(0, 5)
-    if (key[pygame.K_RIGHT] == True) and (player_2.left < width - sizeX):
-        player_2.move_ip(5, 0)
+    #player_1.move(key); player_2.move(key)
+    
     if (key[pygame.K_ESCAPE] == True):
         running = False
     
@@ -100,7 +116,9 @@ while running:
     screen.fill((10, 25, 50))  # RGB color: blue
     pygame.draw.line(screen, (0,0,0), (width/2,0), (width/2,height), width=2)
     
-    pygame.draw.rect(screen, (10,100,250), player_1)
+    
+    #pygame.draw.rect(screen, (10,100,250), player_1)
+    player_1.draw()
     pygame.draw.rect(screen, (200,200,0), player_2)
     
     pygame.draw.circle(screen, ball_color, ball_center, bRad)
