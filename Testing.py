@@ -104,6 +104,25 @@ def high_low_rand(ll, lh, hl, hh):
         return random.randint(ll, lh)
     else:
         return random.randint(hl, hh)
+    
+def start_screen():
+    running = True
+    while running:
+        pygame.Surface.fill(screen,(0,0,0), rect=None, special_flags=0)
+        
+        text_surface = font.render(("Ultimate BONG"), True, (20,200,50))
+        screen.blit(text_surface, (screen_width*0.25,50))
+        
+        key = pygame.key.get_pressed()
+        if key[pygame.K_SPACE]:
+            running = False
+            
+        pygame.display.update()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        
 
 #===================================================================================================================
         
@@ -140,6 +159,8 @@ waiting_for_release = False
 start_time = pygame.time.get_ticks()
 
 #=========================================================================================================================
+
+start_screen()
 
 # Main game loop
 while running:
@@ -215,7 +236,7 @@ while running:
     screen.blit(text_surface, (screen_width*0.75,50))
     
     # Victory Check
-    if player_1.score == 1000 or player_2.score == 1000:
+    if player_1.score == 50 or player_2.score == 50:
         victory_sound.play()
         running = False
         
