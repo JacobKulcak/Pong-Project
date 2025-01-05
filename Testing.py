@@ -9,8 +9,9 @@ screen_width, screen_height = 1500, 700
 class player:
     
     # Init method creates rect and score and draws to screen
-    def __init__(self, x, y, width, height, color):
+    def __init__(self, name, x, y, width, height, color):
         self.rect = pygame.Rect(x, y, width, height)
+        self.name = name
         self.score = 0
         self.color = color
         self.draw()
@@ -98,6 +99,7 @@ def rect_circle_collision(p, b_coord, b_rad):
     # Collision occurs if the distance is less than or equal to the circle's radius
     return distance <= b_rad
 
+
 # Pick random value between two given ranges
 def high_low_rand(ll, lh, hl, hh):
     if random.choice([True, False]):
@@ -105,14 +107,17 @@ def high_low_rand(ll, lh, hl, hh):
     else:
         return random.randint(hl, hh)
     
+    
 def start_screen():
     running = True
     while running:
         pygame.Surface.fill(screen,(0,0,0), rect=None, special_flags=0)
         
-        text_surface = font.render(("Ultimate BONG"), True, (20,200,50))
+        screen.blit(bob, (0,0))
+
+        text_surface = title_font.render(("Ultimate BONG"), True, (20,200,50))
         screen.blit(text_surface, (screen_width*0.25,50))
-        
+                
         key = pygame.key.get_pressed()
         if key[pygame.K_SPACE]:
             running = False
@@ -132,12 +137,12 @@ pygame.display.set_caption("BOB THE VIDEOGAME")
 pygame.display.set_icon(pygame.image.load("bob.png"))
 
 # Set up player 1 with controls and borders
-player_1 = player(screen_width*0.25, (screen_height/2 - 200/2), 20, 200, (10,100,250))
+player_1 = player("Player 1", screen_width*0.25, (screen_height/2 - 200/2), 20, 200, (10,100,250))
 player_1.set_controls(pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d)
 player_1.set_borders(0, screen_height-200, 0, screen_width/2 - player_1.rect.width)
 
 # Set up player 2 with controls and borders
-player_2 = player(screen_width*0.75, (screen_height/2 - 200/2), 20, 200, (200,200,0))
+player_2 = player("Player 2", screen_width*0.75, (screen_height/2 - 200/2), 20, 200, (200,200,0))
 player_2.set_controls(pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT)
 player_2.set_borders(0, screen_height-200, screen_width/2 + 2,screen_width - player_2.rect.width)
 
@@ -152,11 +157,15 @@ pygame.mixer.music.play(-1, 0, 1000)
 # Create objects for framerate, sound effects and fonts used
 collision_sound = pygame.mixer.Sound("BallCollide.mp3")
 victory_sound = pygame.mixer.Sound("Victory.mp3")
-font = pygame.font.Font(None, 72)
+title_font = pygame.font.Font("Saphifen.ttf", 154)
+normal_font = pygame.font.Font(None, 72)
 clock = pygame.time.Clock()
 running = True
 waiting_for_release = False
 start_time = pygame.time.get_ticks()
+bob = pygame.image.load("Bob.jpg")
+bob = pygame.transform.scale(bob, (screen_width,screen_height))
+
 
 #=========================================================================================================================
 
@@ -175,13 +184,13 @@ while running:
         # Events for ball spawn
         if event.type == pygame.KEYDOWN and not waiting_for_release:    
             if event.key == pygame.K_SPACE:
-                balls.append(ball())
+                #balls.append(ball())
                 waiting_for_release = True
         elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
                 waiting_for_release = False
 
     # Timer based ball spawn
-    if (current_time - start_time >= 5000):
+    if (current_time - start_time >= 1000):
         balls.append(ball())
         start_time = current_time
 
@@ -228,17 +237,17 @@ while running:
             b.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
         
     # Player 1 scoreboard
-    text_surface = font.render(str(player_1.score), True, (20,200,50))
+    text_surface = normal_font.render(str(player_1.score), True, (20,200,50))
     screen.blit(text_surface, (screen_width*0.25,50))
     
     # Player 2 scoreboard
-    text_surface = font.render(str(player_2.score), True, (200,20,30))
+    text_surface = normal_font.render(str(player_2.score), True, (200,20,30))
     screen.blit(text_surface, (screen_width*0.75,50))
     
     # Victory Check
-    if player_1.score == 50 or player_2.score == 50:
-        victory_sound.play()
-        running = False
+    #if player_1.score == 500 or player_2.score == 500:
+        #victory_sound.play()
+        #running = False
         
     # Update the display
     pygame.display.update()
