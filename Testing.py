@@ -15,6 +15,11 @@ class player:
         self.name = name
         self.score = 0
         self.color = color
+        self.x_velocity = 0
+        self.y_velocity = 0
+        self.acceleration = 0.8
+        self.friction = 0.9
+        self.max_speed = 10
         self.draw()
         
     # Saves attributes for 4-directional movement keys
@@ -41,15 +46,39 @@ class player:
         
     # Player movement based on movement key and border attributes
     def move(self, key):
-        if (key[self.key_up]) and (self.rect.top > self.top_border):
-            self.rect.move_ip(0, -5)
-        if (key[self.key_down]) and (self.rect.top < self.bottom_border):
-            self.rect.move_ip(0, 5)
-        if (key[self.key_left]) and (self.rect.left > self.left_border):
-            self.rect.move_ip(-5, 0)
-        if (key[self.key_right]) and (self.rect.left < self.right_border):
-            self.rect.move_ip(5, 0)
+        if (key[self.key_up]):
+            self.y_velocity -= self.acceleration
+        if (key[self.key_down]):
+            self.y_velocity += self.acceleration
+        if (key[self.key_left]):
+            self.x_velocity -= self.acceleration
+        if (key[self.key_right]):
+            self.x_velocity += self.acceleration
             
+        if not key[self.key_left] and not key[self.key_right]:
+            if abs(self.x_velocity) > 0:
+                self.x_velocity *= self.friction
+
+        if not key[self.key_up] and not key[self.key_down]:
+            if abs(self.y_velocity) > 0:
+                self.y_velocity *= self.friction
+                
+        if self.x_velocity > self.max_speed:
+            self.x_velocity = self.max_speed
+        elif self.x_velocity < -self.max_speed:
+            self.x_velocity = -self.max_speed
+
+        if self.y_velocity > self.max_speed:
+            self.y_velocity = self.max_speed
+        elif self.y_velocity < -self.max_speed:
+            self.y_velocity = -self.max_speed
+        
+        if(self.rect.top > self.top_border) and (self.rect.top < self.bottom_border):
+            self.rect.y += self.y_velocity
+        if(self.rect.left > self.left_border) and (self.rect.left < self.right_border):
+            self.rect.x += self.x_velocity
+        
+        
     def print_score(self,color,coord):
         text_surface = normal_font.render(str(self.score), True, color)
         screen.blit(text_surface, coord)
@@ -78,23 +107,26 @@ class ball:
         self.y = self.y + self.y_speed
         
         # Borders
-        if (self.x - self.radius) < 0:
-            self.x_speed = self.x_speed * -1
+        if (self.x) < 0:
+            balls.remove(self)
             collision_sound.play()
-        if (self.x + self.radius) > screen_width:
-            self.x_speed = self.x_speed * -1
+            player_2.inc_score()
+        elif (self.x) > screen_width:
+            balls.remove(self)
+            player_1.inc_score()
             collision_sound.play()
-        if (self.y - self.radius) < 0:
+        elif (self.y - self.radius) < 0:
             self.y_speed = self.y_speed * -1
             collision_sound.play()
-        if (self.y + self.radius) > screen_height:
+        elif (self.y + self.radius) > screen_height:
             self.y_speed = self.y_speed * -1
             collision_sound.play()
             
     def check_col(self, p):
         if(self.rect_circle_collision(p.rect)):
+            p.x_velocity += self.x_speed
             self.x_speed *= -1
-            p.inc_score()
+            self.x_speed += abs(p.x_velocity)
             collision_sound.play()
             self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
     
@@ -167,6 +199,8 @@ def game_loop():
     start_time = pygame.time.get_ticks()
     
     while running:
+        
+        print("framerate: " + str(clock.get_fps()), end = '\r')
         
         # Framerate, Counter, Key checker
         clock.tick(60)
