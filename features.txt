@@ -8,3 +8,5 @@ Ball spawn meter
 3-4 powerups that fall from random points in the ceiling
 
 Player gains point for hitting ball, opponent gains point for ball hitting player's wall
+
+online multiplayer??

@@ -6,6 +6,7 @@ screen_width, screen_height = 1500, 700
 
 #=========================================================================================================================
 
+# PLAYER CLASS
 class player:
     
     # Init method creates rect and score and draws to screen
@@ -48,8 +49,13 @@ class player:
             self.rect.move_ip(-5, 0)
         if (key[self.key_right]) and (self.rect.left < self.right_border):
             self.rect.move_ip(5, 0)
-           
             
+    def print_score(self,color,coord):
+        text_surface = normal_font.render(str(self.score), True, color)
+        screen.blit(text_surface, coord)
+           
+
+# BALL CLASS
 class ball:
     
     # Initialize attributes
@@ -84,21 +90,23 @@ class ball:
         if (self.y + self.radius) > screen_height:
             self.y_speed = self.y_speed * -1
             collision_sound.play()
-
-
-def rect_circle_collision(p, b_coord, b_rad):
-    bx, by = b_coord
-    p_x, p_y, p_w, p_h = p
+            
+    def check_col(self, p):
+        if(self.rect_circle_collision(p.rect)):
+            self.x_speed *= -1
+            p.inc_score()
+            collision_sound.play()
+            self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
     
-    closest_x = max(p_x, min(bx, p_x + p_w))
-    closest_y = max(p_y, min(by, p_y + p_h))
-    
-    # Calculate distance from circle's center to this closest point
-    distance = math.sqrt((closest_x - bx) ** 2 + (closest_y - by) ** 2)
-    
-    # Collision occurs if the distance is less than or equal to the circle's radius
-    return distance <= b_rad
-
+    def rect_circle_collision(self, p):
+        closest_x = max(p.left, min(self.x, p.left + p.width))
+        closest_y = max(p.top, min(self.y, p.top + p.height))
+        
+        # Calculate distance from circle's center to this closest point
+        distance = math.sqrt((closest_x - self.x) ** 2 + (closest_y - self.y) ** 2)
+        
+        # Collision occurs if the distance is less than or equal to the circle's radius
+        return distance <= self.radius
 
 # Pick random value between two given ranges
 def high_low_rand(ll, lh, hl, hh):
@@ -107,7 +115,28 @@ def high_low_rand(ll, lh, hl, hh):
     else:
         return random.randint(hl, hh)
     
+def victory(winner):
+    running = True
+    victory_sound.play()
     
+    text_surface = title_font.render(winner.name + " WINS!!!", True, (255,255,255))
+    screen.blit(text_surface, (screen_width,screen_height))
+    
+    while running:
+        
+        key = pygame.key.get_pressed()
+        
+        for event in pygame.event.get():
+            if (event.type == pygame.QUIT) or (key[pygame.K_ESCAPE]):
+                running = False
+                return "exit"
+            
+        if (key[pygame.K_SPACE]):
+            return "start"
+
+            
+
+# START SCREEN
 def start_screen():
     running = True
     while running:
@@ -121,16 +150,71 @@ def start_screen():
         key = pygame.key.get_pressed()
         if key[pygame.K_SPACE]:
             running = False
+            return "game"
             
         pygame.display.update()
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        
+                return "exit"
 
-#===================================================================================================================
+
+# MAIN GAME LOOP
+def game_loop():
+    
+    running = True
+    start_time = pygame.time.get_ticks()
+    
+    while running:
         
+        # Framerate, Counter, Key checker
+        clock.tick(60)
+        current_time = pygame.time.get_ticks()
+        key = pygame.key.get_pressed()
+        
+        # When window is closed or ESC key pressed, program stops
+        for event in pygame.event.get():
+            if (event.type == pygame.QUIT) or (key[pygame.K_ESCAPE]):
+                running = False
+                return "exit"
+
+        # Timer based ball spawn
+        if (current_time - start_time >= 1000):
+            balls.append(ball())
+            start_time = current_time
+        
+        # Blue Background and Line through middle
+        screen.fill((10, 25, 50))
+        pygame.draw.line(screen, (0,0,0), (screen_width/2,0), (screen_width/2,screen_height), width=2)
+
+        # Players and ball update
+        player_1.draw(); player_2.draw()
+        player_1.move(key); player_2.move(key)
+        
+        # For every ball, update location/redraw and check collision w/ players
+        for b in balls: 
+            b.move(); b.draw()
+            b.check_col(player_1); b.check_col(player_2)
+            
+        # Player 1/2 scoreboard
+        player_1.print_score((20,200,50), (screen_width*0.25,50))
+        player_2.print_score((200,20,30), (screen_width*0.75,50))
+        
+        # Victory Check NEEDS WORK 
+        '''if player_1.score == 5:
+            running = False
+            victory(player_1)
+        elif player_2.score == 5:
+            running = False
+            return victory(player_2)'''
+        
+        # Update the display
+        pygame.display.update()
+
+# END GAME LOOP
+#===============================================================================================================
+
 # Set up the display
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("BOB THE VIDEOGAME")
@@ -160,100 +244,23 @@ victory_sound = pygame.mixer.Sound("Victory.mp3")
 title_font = pygame.font.Font("Saphifen.ttf", 154)
 normal_font = pygame.font.Font(None, 72)
 clock = pygame.time.Clock()
-running = True
 waiting_for_release = False
 start_time = pygame.time.get_ticks()
 bob = pygame.image.load("Bob.jpg")
 bob = pygame.transform.scale(bob, (screen_width,screen_height))
 
+running = True
+current_scene = "start"
 
-#=========================================================================================================================
+#===================================================================================================================
 
-start_screen()
-
-# Main game loop
 while running:
-    
-    current_time = pygame.time.get_ticks()
-    
-    # When window is closed, program stops
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-            
-        # Events for ball spawn
-        if event.type == pygame.KEYDOWN and not waiting_for_release:    
-            if event.key == pygame.K_SPACE:
-                #balls.append(ball())
-                waiting_for_release = True
-        elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
-                waiting_for_release = False
-
-    # Timer based ball spawn
-    if (current_time - start_time >= 1000):
-        balls.append(ball())
-        start_time = current_time
-
-    # Framerate
-    clock.tick(60)
-    
-    print("Milliseconds since program started: " + str(pygame.time.get_ticks()), end = '\r')
-    
-    # Player movement
-    key = pygame.key.get_pressed()
-    player_1.move(key); player_2.move(key)
-    
-    # Escape key close game
-    if key[pygame.K_ESCAPE]:
+    if (current_scene == "start"):
+        current_scene = start_screen()
+    elif (current_scene == "game"):
+        current_scene = game_loop()
+    elif (current_scene == "exit"):
         running = False
-    
-    # Fill screen with blue
-    screen.fill((10, 25, 50))
-    
-    # Dividing line
-    pygame.draw.line(screen, (0,0,0), (screen_width/2,0), (screen_width/2,screen_height), width=2)
-    
-    # Players and ball update
-    player_1.draw(); player_2.draw(); 
-    
-    # For every ball object
-    for b in balls:
-        
-        # Update and draw new location
-        b.move(); b.draw()
-        
-        # Detects collision between ball and player 1
-        if(rect_circle_collision(player_1.rect, (b.x, b.y), b.radius)):
-            b.x_speed *= -1
-            player_1.inc_score()
-            collision_sound.play()
-            b.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
-        
-        # Detects collision between ball and player 2
-        if(rect_circle_collision(player_2.rect, (b.x,b.y), b.radius)):
-            b.x_speed *= -1
-            player_2.inc_score()
-            collision_sound.play()
-            b.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
-        
-    # Player 1 scoreboard
-    text_surface = normal_font.render(str(player_1.score), True, (20,200,50))
-    screen.blit(text_surface, (screen_width*0.25,50))
-    
-    # Player 2 scoreboard
-    text_surface = normal_font.render(str(player_2.score), True, (200,20,30))
-    screen.blit(text_surface, (screen_width*0.75,50))
-    
-    # Victory Check
-    #if player_1.score == 500 or player_2.score == 500:
-        #victory_sound.play()
-        #running = False
-        
-    # Update the display
-    pygame.display.update()
-
-# END GAME LOOP
-#===============================================================================================================
 
 # Quit Pygame
 pygame.quit()
