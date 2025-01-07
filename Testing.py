@@ -56,11 +56,11 @@ class player:
             self.x_velocity += self.acceleration
             
         if not key[self.key_left] and not key[self.key_right]:
-            if abs(self.x_velocity) > 0:
+            if abs(self.x_velocity) >= 0.1:
                 self.x_velocity *= self.friction
 
         if not key[self.key_up] and not key[self.key_down]:
-            if abs(self.y_velocity) > 0:
+            if abs(self.y_velocity) > 0.1:
                 self.y_velocity *= self.friction
                 
         if self.x_velocity > self.max_speed:
@@ -75,7 +75,13 @@ class player:
         
         if(self.rect.top > self.top_border) and (self.rect.top < self.bottom_border):
             self.rect.y += self.y_velocity
+        else:
+            self.y_velocity *= -1
+            self.rect.y += self.y_velocity
         if(self.rect.left > self.left_border) and (self.rect.left < self.right_border):
+            self.rect.x += self.x_velocity
+        else:
+            self.x_velocity *= -1
             self.rect.x += self.x_velocity
         
         
@@ -115,18 +121,20 @@ class ball:
             balls.remove(self)
             player_1.inc_score()
             collision_sound.play()
-        elif (self.y - self.radius) < 0:
-            self.y_speed = self.y_speed * -1
-            collision_sound.play()
-        elif (self.y + self.radius) > screen_height:
+        elif ((self.y - self.radius) < 0) or ((self.y + self.radius) > screen_height):
             self.y_speed = self.y_speed * -1
             collision_sound.play()
             
     def check_col(self, p):
         if(self.rect_circle_collision(p.rect)):
+            player_collision_speed = p.x_velocity
             p.x_velocity += self.x_speed
             self.x_speed *= -1
-            self.x_speed += abs(p.x_velocity)
+            if(self.x_speed < 0):
+                self.x_speed -= abs(player_collision_speed)
+            elif (self.x_speed >= 0):
+                self.x_speed += abs(player_collision_speed)
+        
             collision_sound.play()
             self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
     
@@ -200,7 +208,7 @@ def game_loop():
     
     while running:
         
-        print("framerate: " + str(clock.get_fps()), end = '\r')
+        #print("framerate: " + str(clock.get_fps()), end = '\r')
         
         # Framerate, Counter, Key checker
         clock.tick(60)
@@ -235,13 +243,15 @@ def game_loop():
         player_1.print_score((20,200,50), (screen_width*0.25,50))
         player_2.print_score((200,20,30), (screen_width*0.75,50))
         
+        print("Player 1 velocity: " + str(round(player_1.x_velocity, 2)) + " Player 2 Velocity: " + str(round(player_2.x_velocity, 2)), end = "\r")
+        
         # Victory Check NEEDS WORK 
-        '''if player_1.score == 5:
+        if player_1.score == 500:
             running = False
             victory(player_1)
-        elif player_2.score == 5:
+        elif player_2.score == 500:
             running = False
-            return victory(player_2)'''
+            return victory(player_2)
         
         # Update the display
         pygame.display.update()
