@@ -2,7 +2,7 @@
 import pygame, sys, math, random
 pygame.init()
 
-screen_width, screen_height = 1500, 700
+screen_width, screen_height = 1800, 700
 
 #=========================================================================================================================
 
@@ -18,7 +18,7 @@ class player:
         self.x_velocity = 0
         self.y_velocity = 0
         self.acceleration = 0.8
-        self.friction = 0.9
+        self.friction = 0.88
         self.max_speed = 10
         self.draw()
         
@@ -58,10 +58,14 @@ class player:
         if not key[self.key_left] and not key[self.key_right]:
             if abs(self.x_velocity) >= 0.1:
                 self.x_velocity *= self.friction
+            if abs(self.x_velocity) < 0.1:
+                self.x_velocity = 0
 
         if not key[self.key_up] and not key[self.key_down]:
             if abs(self.y_velocity) > 0.1:
                 self.y_velocity *= self.friction
+            if abs(self.y_velocity) < 0.1:
+                self.y_velocity = 0
                 
         if self.x_velocity > self.max_speed:
             self.x_velocity = self.max_speed
@@ -99,8 +103,8 @@ class ball:
         self.y = y
         self.radius = radius
         self.color = color
-        self.x_speed = high_low_rand(-20,-5,5,20)
-        self.y_speed = high_low_rand(-10,-3,3,10)
+        self.x_speed = 3#high_low_rand(-20,-5,5,20)
+        self.y_speed = 3#high_low_rand(-10,-3,3,10)
         self.draw()
         
     # Update
@@ -127,13 +131,22 @@ class ball:
             
     def check_col(self, p):
         if(self.rect_circle_collision(p.rect)):
-            player_collision_speed = p.x_velocity
-            p.x_velocity += self.x_speed
-            self.x_speed *= -1
-            if(self.x_speed < 0):
-                self.x_speed -= abs(player_collision_speed)
-            elif (self.x_speed >= 0):
-                self.x_speed += abs(player_collision_speed)
+            if (self.y > p.rect.top + p.rect.height) or (self.y <= p.rect.y):
+                player_collision_speed = p.y_velocity
+                p.y_velocity += self.y_speed
+                self.y_speed *= -1
+                if(self.y_speed < 0):
+                    self.y_speed -= abs(player_collision_speed)
+                elif (self.y_speed >= 0):
+                    self.y_speed += abs(player_collision_speed)
+            else:
+                player_collision_speed = p.x_velocity
+                p.x_velocity += self.x_speed
+                self.x_speed *= -1
+                if(self.x_speed < 0):
+                    self.x_speed -= abs(player_collision_speed)
+                elif (self.x_speed >= 0):
+                    self.x_speed += abs(player_collision_speed)
         
             collision_sound.play()
             self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
@@ -227,8 +240,8 @@ def game_loop():
             start_time = current_time
         
         # Blue Background and Line through middle
-        screen.fill((10, 25, 50))
-        pygame.draw.line(screen, (0,0,0), (screen_width/2,0), (screen_width/2,screen_height), width=2)
+        screen.fill((0, 5, 10))
+        pygame.draw.line(screen, (255,255,255), (screen_width/2,0), (screen_width/2,screen_height), width=2)
 
         # Players and ball update
         player_1.draw(); player_2.draw()
@@ -243,8 +256,8 @@ def game_loop():
         player_1.print_score((20,200,50), (screen_width*0.25,50))
         player_2.print_score((200,20,30), (screen_width*0.75,50))
         
-        print("Player 1 velocity: " + str(round(player_1.x_velocity, 2)) + " Player 2 Velocity: " + str(round(player_2.x_velocity, 2)), end = "\r")
-        
+        print("Player 1 y velocity: " + str(round(player_1.y_velocity, 2)) + " | Player 2 y Velocity: " + str(round(player_2.y_velocity, 2)) + "     ", end = "\r")
+
         # Victory Check NEEDS WORK 
         if player_1.score == 500:
             running = False
