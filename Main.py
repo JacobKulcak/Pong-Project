@@ -114,6 +114,7 @@ class ball:
         self.color = color
         self.x_speed = 3#high_low_rand(-20,-5,5,20)
         self.y_speed = 3#high_low_rand(-10,-3,3,10)
+        self.cooldown = 0
         self.draw()
         
         
@@ -174,6 +175,7 @@ class ball:
             # Play sound and change color upon colliding with player
             collision_sound.play()
             self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+            self.cooldown = 5
     
     
     # If a ball is colliding with given player, return true
@@ -189,6 +191,11 @@ class ball:
     
 #==========================================================================================================
 
+class button:
+    pass
+
+#==========================================================================================================
+
 # FUNCTIONS
 
 # Pick random value between two given ranges
@@ -201,11 +208,12 @@ def high_low_rand(ll, lh, hl, hh):
 def victory(winner):
     running = True
     victory_sound.play()
-    
     text_surface = title_font.render(winner.name + " WINS!!!", True, (255,255,255))
-    screen.blit(text_surface, (SCREEN_WIDTH,SCREEN_HEIGHT))
+    text_rect = text_surface.get_rect(center = (SCREEN_WIDTH/2,SCREEN_HEIGHT/2 - 100))
     
     while running:
+        
+        screen.blit(text_surface, text_rect)
         
         key = pygame.key.get_pressed()
         
@@ -216,31 +224,70 @@ def victory(winner):
             
         if (key[pygame.K_SPACE]):
             return "start"
+        
+        pygame.display.update()
 
 #===============================================================================================================
 
 # START SCREEN
 def start_screen():
     running = True
+    black_surface = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
+    black_surface.fill((0,0,0))
+    black_surface.set_alpha(230)
+    
+    title_surface = title_font.render(("Ultimate BONG"), True, (20,200,50))
+    title_rect = title_surface.get_rect(center = (SCREEN_WIDTH/2, 100))
+    
+    button_color = (70,130,180)
+    start_button = pygame.Rect(400,300,200,100)
+    start_text = normal_font.render("START", True, (255,255,255))
+    start_text_rect = start_text.get_rect(center = start_button.center)
+    start_button_surface = pygame.Surface((start_button.width, start_button.height))
+    
+    exit_button = pygame.Rect(SCREEN_WIDTH-600,SCREEN_HEIGHT-400,200,100)
+    exit_text = normal_font.render("EXIT", True, (255,255,255))
+    exit_text_rect = exit_text.get_rect(center = exit_button.center)
+    
     while running:
-        pygame.Surface.fill(screen,(0,0,0), rect=None, special_flags=0)
+        
+        pygame.Surface.fill(screen,(0,0,0))
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                return "exit"
+            
+            if start_button.collidepoint(pygame.mouse.get_pos()):  # Check if click is inside button
+                start_button_surface.set_alpha(255)
+                if event.type == pygame.MOUSEBUTTONDOWN:  # Check for mouse click
+                    running = False
+                    return "game"
+            else:
+                start_button_surface.set_alpha(128)
+            
+            if exit_button.collidepoint(pygame.mouse.get_pos()):  # Check if click is inside button
+                if event.type == pygame.MOUSEBUTTONDOWN:  # Check for mouse click
+                    running = False
+                    return "exit"
         
         screen.blit(bob, (0,0))
-
-        text_surface = title_font.render(("Ultimate BONG"), True, (20,200,50))
-        screen.blit(text_surface, (SCREEN_WIDTH*0.25,50))
-                
+        screen.blit(black_surface, (0,0))
+        screen.blit(title_surface, title_rect)
+        screen.blit(start_button_surface, (400,300))
+        
+        pygame.draw.rect(screen, button_color, start_button)
+        screen.blit(start_text, start_text_rect)
+        
+        pygame.draw.rect(screen, button_color, exit_button)
+        screen.blit(exit_text, exit_text_rect)
+        
         key = pygame.key.get_pressed()
         if key[pygame.K_SPACE]:
             running = False
             return "game"
             
         pygame.display.update()
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                return "exit"
 
 #=================================================================================================================
 
@@ -252,8 +299,6 @@ def game_loop():
     
     while running:
         
-        #print("framerate: " + str(clock.get_fps()), end = '\r')
-        
         # Framerate, Counter, Key checker
         clock.tick(60)
         current_time = pygame.time.get_ticks()
@@ -261,9 +306,13 @@ def game_loop():
         
         # When window is closed or ESC key pressed, program stops
         for event in pygame.event.get():
-            if (event.type == pygame.QUIT) or (key[pygame.K_ESCAPE]):
+            if (event.type == pygame.QUIT):
                 running = False
                 return "exit"
+            
+        if (key[pygame.K_ESCAPE]):
+            running = False
+            return "start"
 
         # Timer based ball spawn
         if (current_time - start_time >= 1000):
@@ -272,7 +321,9 @@ def game_loop():
         
         # Blue Background and Line through middle
         screen.fill((0, 5, 10))
-        pygame.draw.line(screen, (255,255,255), (SCREEN_WIDTH/2,0), (SCREEN_WIDTH/2,SCREEN_HEIGHT), width=2)
+        pygame.draw.line(screen, (255,255,255), (SCREEN_WIDTH/2-20,0), (SCREEN_WIDTH/2-20,SCREEN_HEIGHT), width=2)
+        pygame.draw.line(screen, (255,255,255), (SCREEN_WIDTH/2+20,0), (SCREEN_WIDTH/2+20,SCREEN_HEIGHT), width=2)
+        pygame.draw.circle(screen, (255,255,255), (SCREEN_WIDTH/2, SCREEN_HEIGHT/2), 20, width=2)
 
         # Players and ball update
         player_1.draw(); player_2.draw()
@@ -281,24 +332,25 @@ def game_loop():
         # For every ball, update location/redraw and check collision w/ players
         for b in balls: 
             b.move(); b.draw()
-            b.check_col(player_1); b.check_col(player_2)
+            if (b.cooldown == 0):
+                b.check_col(player_1); b.check_col(player_2)
+            else:
+                b.cooldown -= 1
             
         # Player 1/2 scoreboard
         player_1.print_score((20,200,50), (SCREEN_WIDTH*0.25,50))
         player_2.print_score((200,20,30), (SCREEN_WIDTH*0.75,50))
         
-        print("Player 1 y velocity: " + str(round(player_1.y_velocity, 2)) + " | Player 2 y Velocity: " + str(round(player_2.y_velocity, 2)) + "     ", end = "\r")
-
-        # Victory Check NEEDS WORK 
-        if player_1.score == 500:
-            running = False
-            victory(player_1)
-        elif player_2.score == 500:
-            running = False
-            return victory(player_2)
-        
         # Update the display
         pygame.display.update()
+
+        # Victory Check NEEDS WORK 
+        if player_1.score == 5:
+            running = False
+            return victory(player_1)
+        elif player_2.score == 5:
+            running = False
+            return victory(player_2)
 
 # END GAME LOOP
 
@@ -316,12 +368,12 @@ pygame.display.set_icon(pygame.image.load("Resources/bob.png"))
 # Set up player 1 with controls and borders
 player_1 = player("Player 1", SCREEN_WIDTH*0.25, (SCREEN_HEIGHT/2 - 200/2), 20, 200, (10,100,250))
 player_1.set_controls(pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d)
-player_1.set_borders(0, SCREEN_HEIGHT-200, 0, SCREEN_WIDTH/2 - player_1.rect.width)
+player_1.set_borders(0, SCREEN_HEIGHT-200, 0, SCREEN_WIDTH/2 - 21 - player_1.rect.width)
 
 # Set up player 2 with controls and borders
 player_2 = player("Player 2", SCREEN_WIDTH*0.75, (SCREEN_HEIGHT/2 - 200/2), 20, 200, (200,200,0))
 player_2.set_controls(pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT)
-player_2.set_borders(0, SCREEN_HEIGHT-200, SCREEN_WIDTH/2 + 2,SCREEN_WIDTH - player_2.rect.width)
+player_2.set_borders(0, SCREEN_HEIGHT-200, SCREEN_WIDTH/2 + 21 ,SCREEN_WIDTH - player_2.rect.width)
 
 # Set up ball array
 balls = [ball(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 20, (255,255,255))] 
