@@ -1,10 +1,5 @@
-# Initialize pygame and import libraries
-import pygame, sys, math, random
-pygame.init()
-
-screen_width, screen_height = 1800, 700
-
-#=========================================================================================================================
+# CONSTANTS
+SCREEN_WIDTH, SCREEN_HEIGHT = 1800, 700
 
 # PLAYER CLASS
 class player:
@@ -46,6 +41,8 @@ class player:
         
     # Player movement based on movement key and border attributes
     def move(self, key):
+        
+        # For any given movement key being pushed, apply acceleration on current velocity every frame
         if (key[self.key_up]):
             self.y_velocity -= self.acceleration
         if (key[self.key_down]):
@@ -54,51 +51,63 @@ class player:
             self.x_velocity -= self.acceleration
         if (key[self.key_right]):
             self.x_velocity += self.acceleration
-            
+        
+        
+        # If neither horizontal key is pushed, apply friction to velocity
+        # If velocity is low enough, set velocity to 0 to prevent unnecessary computations
         if not key[self.key_left] and not key[self.key_right]:
             if abs(self.x_velocity) >= 0.1:
                 self.x_velocity *= self.friction
             if abs(self.x_velocity) < 0.1:
                 self.x_velocity = 0
 
+
+        # Same as above for vertical keys
         if not key[self.key_up] and not key[self.key_down]:
             if abs(self.y_velocity) > 0.1:
                 self.y_velocity *= self.friction
             if abs(self.y_velocity) < 0.1:
                 self.y_velocity = 0
                 
+                
+        # Prevents velocity from going over a certain limit
         if self.x_velocity > self.max_speed:
             self.x_velocity = self.max_speed
         elif self.x_velocity < -self.max_speed:
             self.x_velocity = -self.max_speed
-
         if self.y_velocity > self.max_speed:
             self.y_velocity = self.max_speed
         elif self.y_velocity < -self.max_speed:
             self.y_velocity = -self.max_speed
-        
+            
+        # MAYBE FIX
+        # Only apply velocity to position if player is within its borders
         if(self.rect.top > self.top_border) and (self.rect.top < self.bottom_border):
             self.rect.y += self.y_velocity
         else:
+            # Otherwise change direction and then apply velocity 
             self.y_velocity *= -1
             self.rect.y += self.y_velocity
+            
+        # Same as above for horizontal keys   
         if(self.rect.left > self.left_border) and (self.rect.left < self.right_border):
             self.rect.x += self.x_velocity
         else:
             self.x_velocity *= -1
             self.rect.x += self.x_velocity
         
-        
+    # Prints player's current score to given coords
     def print_score(self,color,coord):
         text_surface = normal_font.render(str(self.score), True, color)
         screen.blit(text_surface, coord)
            
+#========================================================================================================
 
 # BALL CLASS
 class ball:
     
     # Initialize attributes
-    def __init__(self, x=screen_width/2, y=screen_height/2, radius=20, color=(255,255,255)):
+    def __init__(self, x=SCREEN_WIDTH/2, y=SCREEN_HEIGHT/2, radius=20, color=(255,255,255)):
         self.x = x
         self.y = y
         self.radius = radius
@@ -107,38 +116,52 @@ class ball:
         self.y_speed = 3#high_low_rand(-10,-3,3,10)
         self.draw()
         
+        
     # Update
     def draw(self):
         pygame.draw.circle(screen, self.color, (self.x,self.y), self.radius)
+        
         
     # Movement for ball
     def move(self):
         self.x = self.x + self.x_speed
         self.y = self.y + self.y_speed
         
-        # Borders
+        # If ball hits left wall, delete self and give player 2 a point
         if (self.x) < 0:
             balls.remove(self)
             collision_sound.play()
             player_2.inc_score()
-        elif (self.x) > screen_width:
+        # If ball hits right wall, delete self and give player 1 a point
+        elif (self.x) > SCREEN_WIDTH:
             balls.remove(self)
             player_1.inc_score()
             collision_sound.play()
-        elif ((self.y - self.radius) < 0) or ((self.y + self.radius) > screen_height):
+        # If ball hits top or bottom wall, reverse vertical velocity
+        elif ((self.y - self.radius) < 0) or ((self.y + self.radius) > SCREEN_HEIGHT):
             self.y_speed = self.y_speed * -1
             collision_sound.play()
-            
+           
+    # PROBLEMATIC
+    # Responsible for player/ball collision handling
     def check_col(self, p):
+        # If ball collides with player
         if(self.rect_circle_collision(p.rect)):
+            # And if ball vertical position is detected to be higher or lower than player position
             if (self.y > p.rect.top + p.rect.height) or (self.y <= p.rect.y):
+                # Save player current velocity for later
                 player_collision_speed = p.y_velocity
+                # Apply ball velocity to player for knockback
                 p.y_velocity += self.y_speed
+                # Reverse ball velocity
                 self.y_speed *= -1
+                # Apply initial player speed to ball depending on velocity direction
                 if(self.y_speed < 0):
                     self.y_speed -= abs(player_collision_speed)
                 elif (self.y_speed >= 0):
                     self.y_speed += abs(player_collision_speed)
+                    
+            # If ball is on same relative vertical positioning as player, apply above but for x velocity
             else:
                 player_collision_speed = p.x_velocity
                 p.x_velocity += self.x_speed
@@ -147,10 +170,13 @@ class ball:
                     self.x_speed -= abs(player_collision_speed)
                 elif (self.x_speed >= 0):
                     self.x_speed += abs(player_collision_speed)
-        
+
+            # Play sound and change color upon colliding with player
             collision_sound.play()
             self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
     
+    
+    # If a ball is colliding with given player, return true
     def rect_circle_collision(self, p):
         closest_x = max(p.left, min(self.x, p.left + p.width))
         closest_y = max(p.top, min(self.y, p.top + p.height))
@@ -160,6 +186,10 @@ class ball:
         
         # Collision occurs if the distance is less than or equal to the circle's radius
         return distance <= self.radius
+    
+#==========================================================================================================
+
+# FUNCTIONS
 
 # Pick random value between two given ranges
 def high_low_rand(ll, lh, hl, hh):
@@ -173,7 +203,7 @@ def victory(winner):
     victory_sound.play()
     
     text_surface = title_font.render(winner.name + " WINS!!!", True, (255,255,255))
-    screen.blit(text_surface, (screen_width,screen_height))
+    screen.blit(text_surface, (SCREEN_WIDTH,SCREEN_HEIGHT))
     
     while running:
         
@@ -187,7 +217,7 @@ def victory(winner):
         if (key[pygame.K_SPACE]):
             return "start"
 
-            
+#===============================================================================================================
 
 # START SCREEN
 def start_screen():
@@ -198,7 +228,7 @@ def start_screen():
         screen.blit(bob, (0,0))
 
         text_surface = title_font.render(("Ultimate BONG"), True, (20,200,50))
-        screen.blit(text_surface, (screen_width*0.25,50))
+        screen.blit(text_surface, (SCREEN_WIDTH*0.25,50))
                 
         key = pygame.key.get_pressed()
         if key[pygame.K_SPACE]:
@@ -212,6 +242,7 @@ def start_screen():
                 running = False
                 return "exit"
 
+#=================================================================================================================
 
 # MAIN GAME LOOP
 def game_loop():
@@ -241,7 +272,7 @@ def game_loop():
         
         # Blue Background and Line through middle
         screen.fill((0, 5, 10))
-        pygame.draw.line(screen, (255,255,255), (screen_width/2,0), (screen_width/2,screen_height), width=2)
+        pygame.draw.line(screen, (255,255,255), (SCREEN_WIDTH/2,0), (SCREEN_WIDTH/2,SCREEN_HEIGHT), width=2)
 
         # Players and ball update
         player_1.draw(); player_2.draw()
@@ -253,8 +284,8 @@ def game_loop():
             b.check_col(player_1); b.check_col(player_2)
             
         # Player 1/2 scoreboard
-        player_1.print_score((20,200,50), (screen_width*0.25,50))
-        player_2.print_score((200,20,30), (screen_width*0.75,50))
+        player_1.print_score((20,200,50), (SCREEN_WIDTH*0.25,50))
+        player_2.print_score((200,20,30), (SCREEN_WIDTH*0.75,50))
         
         print("Player 1 y velocity: " + str(round(player_1.y_velocity, 2)) + " | Player 2 y Velocity: " + str(round(player_2.y_velocity, 2)) + "     ", end = "\r")
 
@@ -270,46 +301,52 @@ def game_loop():
         pygame.display.update()
 
 # END GAME LOOP
+
 #===============================================================================================================
 
+# INITIALIZE
+import pygame, sys, math, random
+pygame.init()
+
 # Set up the display
-screen = pygame.display.set_mode((screen_width, screen_height))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("BOB THE VIDEOGAME")
-pygame.display.set_icon(pygame.image.load("bob.png"))
+pygame.display.set_icon(pygame.image.load("Resources/bob.png"))
 
 # Set up player 1 with controls and borders
-player_1 = player("Player 1", screen_width*0.25, (screen_height/2 - 200/2), 20, 200, (10,100,250))
+player_1 = player("Player 1", SCREEN_WIDTH*0.25, (SCREEN_HEIGHT/2 - 200/2), 20, 200, (10,100,250))
 player_1.set_controls(pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d)
-player_1.set_borders(0, screen_height-200, 0, screen_width/2 - player_1.rect.width)
+player_1.set_borders(0, SCREEN_HEIGHT-200, 0, SCREEN_WIDTH/2 - player_1.rect.width)
 
 # Set up player 2 with controls and borders
-player_2 = player("Player 2", screen_width*0.75, (screen_height/2 - 200/2), 20, 200, (200,200,0))
+player_2 = player("Player 2", SCREEN_WIDTH*0.75, (SCREEN_HEIGHT/2 - 200/2), 20, 200, (200,200,0))
 player_2.set_controls(pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT)
-player_2.set_borders(0, screen_height-200, screen_width/2 + 2,screen_width - player_2.rect.width)
+player_2.set_borders(0, SCREEN_HEIGHT-200, SCREEN_WIDTH/2 + 2,SCREEN_WIDTH - player_2.rect.width)
 
 # Set up ball array
-balls = [ball(screen_width/2, screen_height/2, 20, (255,255,255))] 
+balls = [ball(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 20, (255,255,255))] 
 
 # Music play
 pygame.mixer.music.set_volume(0.1)
-pygame.mixer.music.load("BGM-1.mp3")
+pygame.mixer.music.load("Resources/BGM-1.mp3")
 pygame.mixer.music.play(-1, 0, 1000)
 
 # Create objects for framerate, sound effects and fonts used
-collision_sound = pygame.mixer.Sound("BallCollide.mp3")
-victory_sound = pygame.mixer.Sound("Victory.mp3")
-title_font = pygame.font.Font("Saphifen.ttf", 154)
+collision_sound = pygame.mixer.Sound("Resources/BallCollide.mp3")
+victory_sound = pygame.mixer.Sound("Resources/Victory.mp3")
+title_font = pygame.font.Font("Resources/Saphifen.ttf", 154)
 normal_font = pygame.font.Font(None, 72)
 clock = pygame.time.Clock()
 waiting_for_release = False
 start_time = pygame.time.get_ticks()
-bob = pygame.image.load("Bob.jpg")
-bob = pygame.transform.scale(bob, (screen_width,screen_height))
+bob = pygame.image.load("Resources/Bob.jpg")
+bob = pygame.transform.scale(bob, (SCREEN_WIDTH,SCREEN_HEIGHT))
 
 running = True
 current_scene = "start"
 
 #===================================================================================================================
+# MAIN LOOP
 
 while running:
     if (current_scene == "start"):
