@@ -1,5 +1,5 @@
 # CONSTANTS
-SCREEN_WIDTH, SCREEN_HEIGHT = 1800, 700
+SCREEN_WIDTH, SCREEN_HEIGHT = 1500, 700
 
 # PLAYER CLASS
 class player:
@@ -112,8 +112,8 @@ class ball:
         self.y = y
         self.radius = radius
         self.color = color
-        self.x_speed = 3#high_low_rand(-20,-5,5,20)
-        self.y_speed = 3#high_low_rand(-10,-3,3,10)
+        self.x_speed = high_low_rand(-15,-5,5,15)
+        self.y_speed = high_low_rand(-7,-3,3,7)
         self.cooldown = 0
         self.draw()
         
@@ -315,7 +315,7 @@ def game_loop():
             return "start"
 
         # Timer based ball spawn
-        if (current_time - start_time >= 1000):
+        if (current_time - start_time >= 2000):
             balls.append(ball())
             start_time = current_time
         
@@ -345,10 +345,10 @@ def game_loop():
         pygame.display.update()
 
         # Victory Check NEEDS WORK 
-        if player_1.score == 5:
+        if player_1.score == 50:
             running = False
             return victory(player_1)
-        elif player_2.score == 5:
+        elif player_2.score == 50:
             running = False
             return victory(player_2)
 
