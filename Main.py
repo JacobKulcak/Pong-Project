@@ -1,5 +1,5 @@
 # CONSTANTS
-SCREEN_WIDTH, SCREEN_HEIGHT = 1500, 700
+SCREEN_WIDTH, SCREEN_HEIGHT = 1500, 600
 
 # PLAYER CLASS
 class player:
@@ -86,15 +86,25 @@ class player:
             self.rect.y += self.y_velocity
         else:
             # Otherwise change direction and then apply velocity 
-            self.y_velocity *= -1
+            self.y_velocity *= -0.6
             self.rect.y += self.y_velocity
             
         # Same as above for horizontal keys   
-        if(self.rect.left > self.left_border) and (self.rect.left < self.right_border):
+        if(self.rect.left > self.left_border):
+            self.rect.x += self.x_velocity
+        elif(self.x_velocity != 0):
+            self.x_velocity *= -0.6
             self.rect.x += self.x_velocity
         else:
-            self.x_velocity *= -1
+            self.rect.x += 1
+        
+        if (self.rect.left < self.right_border):
             self.rect.x += self.x_velocity
+        elif(self.x_velocity != 0):
+            self.x_velocity *= -0.6
+            self.rect.x += self.x_velocity
+        else:
+            self.rect.x -= 1
         
     # Prints player's current score to given coords
     def print_score(self,color,coord):
@@ -112,8 +122,11 @@ class ball:
         self.y = y
         self.radius = radius
         self.color = color
-        self.x_speed = high_low_rand(-15,-5,5,15)
-        self.y_speed = high_low_rand(-7,-3,3,7)
+        self.x_speed = high_low_rand(-15,-7,7,15)
+        self.y_speed = high_low_rand(-3,-1,1,3)
+        self.base_x_speed = self.x_speed
+        self.base_y_speed = self.y_speed
+        self.friction = 0.99
         self.cooldown = 0
         self.draw()
         
@@ -127,6 +140,12 @@ class ball:
     def move(self):
         self.x = self.x + self.x_speed
         self.y = self.y + self.y_speed
+        
+        # Slows ball down from gained player momentum
+        if (abs(self.x_speed) > abs(self.base_x_speed)):
+            self.x_speed *= self.friction
+        if (abs(self.y_speed) > abs(self.base_y_speed)):
+            self.y_speed *= self.friction
         
         # If ball hits left wall, delete self and give player 2 a point
         if (self.x) < 0:
@@ -142,6 +161,7 @@ class ball:
         elif ((self.y - self.radius) < 0) or ((self.y + self.radius) > SCREEN_HEIGHT):
             self.y_speed = self.y_speed * -1
             collision_sound.play()
+        
            
     # PROBLEMATIC
     # Responsible for player/ball collision handling
@@ -245,7 +265,7 @@ def start_screen():
     start_text_rect = start_text.get_rect(center = start_button.center)
     start_button_surface = pygame.Surface((start_button.width, start_button.height))
     
-    exit_button = pygame.Rect(SCREEN_WIDTH-600,SCREEN_HEIGHT-400,200,100)
+    exit_button = pygame.Rect(SCREEN_WIDTH-600,SCREEN_HEIGHT-300,200,100)
     exit_text = normal_font.render("EXIT", True, (255,255,255))
     exit_text_rect = exit_text.get_rect(center = exit_button.center)
     
@@ -324,6 +344,9 @@ def game_loop():
         pygame.draw.line(screen, (255,255,255), (SCREEN_WIDTH/2-20,0), (SCREEN_WIDTH/2-20,SCREEN_HEIGHT), width=2)
         pygame.draw.line(screen, (255,255,255), (SCREEN_WIDTH/2+20,0), (SCREEN_WIDTH/2+20,SCREEN_HEIGHT), width=2)
         pygame.draw.circle(screen, (255,255,255), (SCREEN_WIDTH/2, SCREEN_HEIGHT/2), 20, width=2)
+
+        # Ball meter
+        pygame.draw.line(screen, (0,250,50), (SCREEN_WIDTH/2-75,SCREEN_HEIGHT - 100), (SCREEN_WIDTH/2+75 - (150 * ((current_time - start_time)/2000)), SCREEN_HEIGHT - 100), width=4)
 
         # Players and ball update
         player_1.draw(); player_2.draw()
