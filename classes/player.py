@@ -1,7 +1,7 @@
 # PLAYER CLASS
 import pygame
 
-class player:
+class Player:
     
     # Init method creates rect and score and draws to screen
     def __init__(self, name, x, y, width, height, color):

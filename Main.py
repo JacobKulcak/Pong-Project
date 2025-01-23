@@ -1,6 +1,6 @@
 # CONSTANTS
 SCREEN_WIDTH, SCREEN_HEIGHT = 1500, 600
-from player import player;
+from classes.player import Player;
 
 # BALL CLASS
 class ball:
@@ -278,12 +278,12 @@ pygame.display.set_caption("BOB THE VIDEOGAME")
 pygame.display.set_icon(pygame.image.load("Resources/bob.png"))
 
 # Set up player 1 with controls and borders
-player_1 = player("Player 1", SCREEN_WIDTH*0.25, (SCREEN_HEIGHT/2 - 200/2), 20, 200, (10,100,250))
+player_1 = Player("Player 1", SCREEN_WIDTH*0.25, (SCREEN_HEIGHT/2 - 200/2), 20, 200, (10,100,250))
 player_1.set_controls(pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d)
 player_1.set_borders(0, SCREEN_HEIGHT-200, 0, SCREEN_WIDTH/2 - 21 - player_1.rect.width)
 
 # Set up player 2 with controls and borders
-player_2 = player("Player 2", SCREEN_WIDTH*0.75, (SCREEN_HEIGHT/2 - 200/2), 20, 200, (200,200,0))
+player_2 = Player("Player 2", SCREEN_WIDTH*0.75, (SCREEN_HEIGHT/2 - 200/2), 20, 200, (200,200,0))
 player_2.set_controls(pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT)
 player_2.set_borders(0, SCREEN_HEIGHT-200, SCREEN_WIDTH/2 + 21 ,SCREEN_WIDTH - player_2.rect.width)
 
