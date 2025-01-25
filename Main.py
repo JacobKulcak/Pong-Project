@@ -29,18 +29,18 @@ balls = [Ball(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 20, (255,255,255))]
 
 # Music play
 pygame.mixer.music.set_volume(0.1)
-pygame.mixer.music.load("Resources/BGM-1.mp3")
+pygame.mixer.music.load("resources/BGM-1.mp3")
 pygame.mixer.music.play(-1, 0, 1000)
 
 # Create objects for framerate, sound effects and fonts used
-collision_sound = pygame.mixer.Sound("Resources/BallCollide.mp3")
-victory_sound = pygame.mixer.Sound("Resources/Victory.mp3")
-title_font = pygame.font.Font("Resources/Saphifen.ttf", 154)
+collision_sound = pygame.mixer.Sound("resources/BallCollide.mp3")
+victory_sound = pygame.mixer.Sound("resources/Victory.mp3")
+title_font = pygame.font.Font("resources/Saphifen.ttf", 154)
 normal_font = pygame.font.Font(None, 72)
 clock = pygame.time.Clock()
 waiting_for_release = False
 start_time = pygame.time.get_ticks()
-bob = pygame.image.load("Resources/Bob.jpg")
+bob = pygame.image.load("resources/Bob.jpg")
 bob = pygame.transform.scale(bob, (SCREEN_WIDTH,SCREEN_HEIGHT))
 
 running = True
