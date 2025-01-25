@@ -1,4 +1,7 @@
 # BALL CLASS
+import pygame, random, math
+from utils.functions import *
+from utils.constants import *
 class Ball:
     
     # Initialize attributes

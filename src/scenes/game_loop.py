@@ -1,4 +1,8 @@
 # MAIN GAME LOOP
+import pygame
+
+
+
 def game_loop():
     
     running = True
