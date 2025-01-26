@@ -10,9 +10,6 @@ title_font = pygame.font.Font("resources/Saphifen.ttf", 154)
 normal_font = pygame.font.Font(None, 72)
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
-player_1 = Player("Player 1", SCREEN_WIDTH*0.25, (SCREEN_HEIGHT/2 - 200/2), 20, 200, (10,100,250))
-player_2 = Player("Player 2", SCREEN_WIDTH*0.75, (SCREEN_HEIGHT/2 - 200/2), 20, 200, (200,200,0))
-
 # Set up ball array
 balls = [Ball(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 20, (255,255,255))] 
 
