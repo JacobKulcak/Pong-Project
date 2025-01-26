@@ -1,3 +1,5 @@
+import pygame
+from src.utils.constants import *
 
 # START SCREEN
 def start_screen():

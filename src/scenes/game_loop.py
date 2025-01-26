@@ -1,6 +1,8 @@
 # MAIN GAME LOOP
 import pygame
-
+from src.utils.constants import *
+from src.scenes.victory_screen import victory
+from src.classes.ball import Ball
 
 
 def game_loop():

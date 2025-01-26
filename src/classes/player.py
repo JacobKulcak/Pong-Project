@@ -1,5 +1,6 @@
 # PLAYER CLASS
 import pygame
+from src.utils.constants import normal_font
 
 class Player:
     

@@ -1,3 +1,7 @@
+#VICTORY SCREEN
+import pygame
+from src.utils.constants import *
+
 def victory(winner):
     running = True
     victory_sound.play()
